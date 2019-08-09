@@ -111,7 +111,7 @@ def Validate_json(terraform_files):
   return(errors)
 
 
-def Print_status(errors):
+def Print_status(errors, no_of_tf_files, no_of_definitions, directory):
   if len(errors) > 0:
     print('Invalid JSON found!\n')
     for tf_file in errors:
@@ -122,6 +122,8 @@ def Print_status(errors):
     return 1
 
   else:
+    print('Scanned %s Terraform files and %s task definitions in "%s"' %
+           (str(no_of_tf_files), str(no_of_definitions), directory))
     print('All JSONs seem to be valid - You are good to go!')
     return 0
 
@@ -136,9 +138,15 @@ def main():
 
   errors = Validate_json(task_definitions)
 
-  exit_code = Print_status(errors)
+  exit_code = Print_status(
+          errors,
+          len(tf_files_dictionary),
+          len(task_definitions),
+          DIR
+  )
 
   sys.exit(exit_code)
 
 if __name__ == "__main__":
   main()
+
