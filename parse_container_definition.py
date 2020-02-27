@@ -116,7 +116,6 @@ def Validate_json(terraform_files):
   return(errors)
 
 def Subtitute_line(input, terraform_files):
-  print(input)
   error_msg = ''
   re_test_str = re.compile('line\s\d+\scolumn')
   for key, value in input.items():
