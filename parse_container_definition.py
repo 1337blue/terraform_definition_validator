@@ -116,16 +116,22 @@ def Validate_json(terraform_files):
   return(errors)
 
 def Subtitute_line(input, terraform_files):
+  print(input)
+  error_msg = ''
   re_test_str = re.compile('line\s\d+\scolumn')
   for key, value in input.items():
     for item in terraform_files.get(key):
       if type(item) is int:
         extra_lines = item
     error_msg = str(value)
-  match_obj = re_test_str.search(error_msg)
 
-  print(extra_lines)
-  print(error_msg)
+    if len(error_msg) > 0:
+      match_obj = re_test_str.search(error_msg)
+      line_no_start = match_obj.start(0)
+      line_no_end = match_obj.end(0)
+      line_no = int(error_msg[line_no_start + len('line '):line_no_end - len(' column')])
+      error_msg = error_msg.replace(' %s ' % str(line_no), ' %s ' % str(line_no + extra_lines))
+      input.update({key:error_msg})
 
   return(input)
 
@@ -157,7 +163,7 @@ def main():
 
   errors = Validate_json(task_definitions)
 
-  #errors = Subtitute_line(errors, task_definitions)
+  errors = Subtitute_line(errors, task_definitions)
 
   exit_code = Print_status(
           errors,
