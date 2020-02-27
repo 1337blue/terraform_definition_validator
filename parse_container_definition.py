@@ -79,16 +79,20 @@ def Get_definition_from_tf_files(terraform_files):
       capture_lines = False
       definition = ''
       set_of_definitions = set()
+      no_of_lines = 0
       for line in file:
         if capture_lines and 'DEFINITION' not in line:
           line = Subtitute_tf_vars(line)
           definition += line
         if not capture_lines and regex_definition_start.match(line):
+          task_definition_starting_line = no_of_lines
           capture_lines = True
         if capture_lines and regex_definition_end.match(line):
           capture_lines = False
           set_of_definitions.add(definition)
+          set_of_definitions.add(task_definition_starting_line)
           definition = ''
+        no_of_lines += 1
 
       if len(set_of_definitions) > 0:
         output.update({key:set_of_definitions})
@@ -103,12 +107,32 @@ def Validate_json(terraform_files):
   for key in terraform_files:
     definitions = terraform_files.get(key)
     for definition in definitions:
-      try:
-        json.loads(definition)
-      except ValueError as err:
-        errors.update({key:err})
+      if type(definition) is not int:
+        try:
+          json.loads(definition)
+        except ValueError as err:
+          errors.update({key:err})
 
   return(errors)
+
+def Subtitute_line(input, terraform_files):
+  error_msg = ''
+  re_test_str = re.compile('line\s\d+\scolumn')
+  for key, value in input.items():
+    for item in terraform_files.get(key):
+      if type(item) is int:
+        extra_lines = item
+    error_msg = str(value)
+
+    if len(error_msg) > 0:
+      match_obj = re_test_str.search(error_msg)
+      line_no_start = match_obj.start(0)
+      line_no_end = match_obj.end(0)
+      line_no = int(error_msg[line_no_start + len('line '):line_no_end - len(' column')])
+      error_msg = error_msg.replace(' %s ' % str(line_no), ' %s ' % str(line_no + extra_lines))
+      input.update({key:error_msg})
+
+  return(input)
 
 
 def Print_status(errors, no_of_tf_files, no_of_definitions, directory):
@@ -137,6 +161,8 @@ def main():
   task_definitions = Get_definition_from_tf_files(tf_files_dictionary)
 
   errors = Validate_json(task_definitions)
+
+  errors = Subtitute_line(errors, task_definitions)
 
   exit_code = Print_status(
           errors,
