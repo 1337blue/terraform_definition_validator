@@ -141,7 +141,6 @@ def Subtitute_line(input, terraform_files):
     for key, value in input.get(tf_file).items():
       for enclosure in terraform_files.get(tf_file):
         for item in terraform_files.get(tf_file).get(enclosure):
-          print(item)
           if type(item) is int:
             extra_lines = item
         error_msg = str(value)
@@ -160,18 +159,23 @@ def Subtitute_line(input, terraform_files):
 
 
 def Print_status(errors, no_of_tf_files, no_of_definitions, directory):
-  if len(errors) > 0:
-    print('Invalid JSON found!\n')
-    for tf_file in errors:
-      print('In "%s" the following JSON error was found:\n===> %s\n' %
-        (tf_file, str(errors.get(tf_file)))
-      )
+  error_found = False
+  for tf_file in errors:
+    for enclosure in errors.get(tf_file):
+      error = errors.get(tf_file).get(enclosure)
+      if len(error) > 0:
+        if not error_found:
+          print('Invalid JSON found!\n')
+        error_found = True
+        print('In "%s" the following JSON error was found:\n===> %s\n' %
+          (tf_file, error)
+        )
 
+  if error_found:
     return 1
-
   else:
     print('Scanned %s Terraform files and %s task definitions in "%s"' %
-           (str(no_of_tf_files), str(no_of_definitions), directory))
+          (str(no_of_tf_files), str(no_of_definitions), directory))
     print('All JSONs seem to be valid - You are good to go!')
     return 0
 
