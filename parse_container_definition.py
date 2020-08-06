@@ -75,32 +75,37 @@ def Get_json_enclosures():
 
 def Get_jsons_from_tf_files(terraform_files):
 
-  regex_definition_start = re.compile('\s*\S+\s=\s<<DEFINITION')
-  regex_definition_end = re.compile('DEFINITION')
   output = {}
 
   for key in terraform_files:
-    with open(key) as file:
-      capture_lines = False
-      definition = ''
-      set_of_definitions = set()
-      no_of_lines = 0
-      for line in file:
-        if capture_lines and 'DEFINITION' not in line:
-          line = Subtitute_tf_vars(line)
-          definition += line
-        if not capture_lines and regex_definition_start.match(line):
-          task_definition_starting_line = no_of_lines
-          capture_lines = True
-        if capture_lines and regex_definition_end.match(line):
-          capture_lines = False
-          set_of_definitions.add(definition)
-          set_of_definitions.add(task_definition_starting_line)
-          definition = ''
-        no_of_lines += 1
+    temp_dict = {}
+    for enclosure in Get_json_enclosures():
+      with open(key) as file:
+        regex_definition_start = re.compile('\s*\S+\s+=\s+<<' + enclosure)
+        regex_definition_end = re.compile(enclosure)
+        capture_lines = False
+        definition = ''
+        set_of_definitions = set()
+        no_of_lines = 0
+        for line in file:
+          if capture_lines and enclosure not in line:
+            line = Subtitute_tf_vars(line)
+            definition += line
+          if not capture_lines and regex_definition_start.match(line):
+            task_definition_starting_line = no_of_lines
+            capture_lines = True
+          if capture_lines and regex_definition_end.match(line):
+            capture_lines = False
+            set_of_definitions.add(definition)
+            set_of_definitions.add(task_definition_starting_line)
+            definition = ''
+          no_of_lines += 1
 
-      if len(set_of_definitions) > 0:
-        output.update({key:set_of_definitions})
+        if len(set_of_definitions) > 0:
+          temp_dict.update({enclosure:set_of_definitions})
+
+      if len(temp_dict) > 0:
+        output.update({key:temp_dict})
 
   return output
 
