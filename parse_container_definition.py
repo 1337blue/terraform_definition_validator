@@ -22,6 +22,7 @@ def parse_options(operations=[]):
 
     return parser.parse_args()
 
+
 def Get_tf_files_in_dir(dir):
 
   regex_tf_file = re.compile('\S+\.tf')
@@ -66,6 +67,10 @@ def Subtitute_tf_vars(line):
       tf_var = ''
 
   return line
+
+
+def Get_json_enclosures():
+  return ['DEFINITION', 'EOF', 'INPUT', 'PATTERN', 'POLICY']
 
 
 def Get_jsons_from_tf_files(terraform_files):
@@ -114,6 +119,7 @@ def Validate_json(terraform_files):
           json_errors.update({key:err})
 
   return(json_errors)
+
 
 def Subtitute_line(input, terraform_files):
   error_msg = ''
