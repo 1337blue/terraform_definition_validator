@@ -136,19 +136,25 @@ def Validate_json(terraform_files):
 def Subtitute_line(input, terraform_files):
   error_msg = ''
   re_test_str = re.compile('line\s\d+\scolumn')
-  for key, value in input.items():
-    for item in terraform_files.get(key):
-      if type(item) is int:
-        extra_lines = item
-    error_msg = str(value)
+  for tf_file in input:
+    temp_dict = {}
+    for key, value in input.get(tf_file).items():
+      for enclosure in terraform_files.get(tf_file):
+        for item in terraform_files.get(tf_file).get(enclosure):
+          print(item)
+          if type(item) is int:
+            extra_lines = item
+        error_msg = str(value)
 
-    if len(error_msg) > 0:
-      match_obj = re_test_str.search(error_msg)
-      line_no_start = match_obj.start(0)
-      line_no_end = match_obj.end(0)
-      line_no = int(error_msg[line_no_start + len('line '):line_no_end - len(' column')])
-      error_msg = error_msg.replace(' %s ' % str(line_no), ' %s ' % str(line_no + extra_lines))
-      input.update({key:error_msg})
+        if len(error_msg) > 0:
+          match_obj = re_test_str.search(error_msg)
+          line_no_start = match_obj.start(0)
+          line_no_end = match_obj.end(0)
+          line_no = int(error_msg[line_no_start + len('line '):line_no_end - len(' column')])
+          error_msg = error_msg.replace(' %s ' % str(line_no), ' %s ' % str(line_no + extra_lines))
+          temp_dict.update({key:error_msg})
+
+    input.update({tf_file:temp_dict})
 
   return(input)
 
