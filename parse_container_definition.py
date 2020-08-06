@@ -74,6 +74,10 @@ def Get_json_enclosures():
 
 
 def Get_jsons_from_tf_files(terraform_files):
+  '''
+  Returns a nested dict with the following structure:
+  {path_to_file}{json_enclosure_type}{json_block}
+  '''
 
   output = {}
 
@@ -115,13 +119,16 @@ def Validate_json(terraform_files):
   json_errors = {}
 
   for key in terraform_files:
-    definitions = terraform_files.get(key)
-    for definition in definitions:
-      if type(definition) is not int:
-        try:
-          json.loads(definition)
-        except ValueError as err:
-          json_errors.update({key:err})
+    temp_dict = {}
+    for enclosure in terraform_files.get(key):
+      definitions = terraform_files.get(key).get(enclosure)
+      for definition in definitions:
+        if type(definition) is not int:
+          try:
+            json.loads(definition)
+          except ValueError as err:
+            temp_dict.update({enclosure:err})
+    json_errors.update({key:temp_dict})
 
   return(json_errors)
 
@@ -169,16 +176,16 @@ def main():
 
   tf_files_dictionary = Get_tf_files_in_dir(DIR)
 
-  task_definitions = Get_jsons_from_tf_files(tf_files_dictionary)
+  json_blocks = Get_jsons_from_tf_files(tf_files_dictionary)
 
-  json_errors = Validate_json(task_definitions)
+  json_errors = Validate_json(json_blocks)
 
-  json_errors = Subtitute_line(json_errors, task_definitions)
+  json_errors = Subtitute_line(json_errors, json_blocks)
 
   exit_code = Print_status(
           json_errors,
           len(tf_files_dictionary),
-          len(task_definitions),
+          len(json_blocks),
           DIR
   )
 
