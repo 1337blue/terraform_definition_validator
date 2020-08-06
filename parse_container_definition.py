@@ -68,7 +68,7 @@ def Subtitute_tf_vars(line):
   return line
 
 
-def Get_definition_from_tf_files(terraform_files):
+def Get_jsons_from_tf_files(terraform_files):
 
   regex_definition_start = re.compile('\s*\S+\s=\s<<DEFINITION')
   regex_definition_end = re.compile('DEFINITION')
@@ -102,7 +102,7 @@ def Get_definition_from_tf_files(terraform_files):
 
 def Validate_json(terraform_files):
 
-  errors = {}
+  json_errors = {}
 
   for key in terraform_files:
     definitions = terraform_files.get(key)
@@ -111,9 +111,9 @@ def Validate_json(terraform_files):
         try:
           json.loads(definition)
         except ValueError as err:
-          errors.update({key:err})
+          json_errors.update({key:err})
 
-  return(errors)
+  return(json_errors)
 
 def Subtitute_line(input, terraform_files):
   error_msg = ''
@@ -158,14 +158,14 @@ def main():
 
   tf_files_dictionary = Get_tf_files_in_dir(DIR)
 
-  task_definitions = Get_definition_from_tf_files(tf_files_dictionary)
+  task_definitions = Get_jsons_from_tf_files(tf_files_dictionary)
 
-  errors = Validate_json(task_definitions)
+  json_errors = Validate_json(task_definitions)
 
-  errors = Subtitute_line(errors, task_definitions)
+  json_errors = Subtitute_line(json_errors, task_definitions)
 
   exit_code = Print_status(
-          errors,
+          json_errors,
           len(tf_files_dictionary),
           len(task_definitions),
           DIR
